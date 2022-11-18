@@ -1,31 +1,29 @@
 #define _CRT_SECURE_NO_WARNINGS 1
 #include<stdio.h>
 #include"game.h"
-
-//主函数
 int main()
 {
-	srand((unsigned int)time(NULL));
 	int input = 0;
-	//游戏进入界面，可以一直玩游戏do...while()
-	do
+	srand((unsigned int)time(NULL));
+	while (1)
 	{
 		menu();
-		printf("请输入：");
+		printf("请选择：");
 		scanf("%d", &input);
-		switch (input)
+		if (input == 1)
 		{
-			case 1:
-				game();
-				break;
-			case 0:
-				printf("退出游戏\n");
-				break;
-			default:
-				printf("输入错误，请重新输入\n");
-				break;
+			printf("玩游戏\n");
+			game();
 		}
-			
-	} while (input);
+		else if (input == 0)
+		{
+			printf("退出游戏\n");
+			break;
+		}
+		else
+		{
+			printf("输入错误，请重新输入：");
+		}
+	}
 	return 0;
 }

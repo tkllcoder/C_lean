@@ -1,204 +1,143 @@
 #define _CRT_SECURE_NO_WARNINGS 1
 #include"game.h"
 
-//函数定义
-void menu()//主菜单函数
+
+//主菜单函数
+void menu()
 {
-	printf("*******************************\n");
-	printf("********    1.play     ********\n");
-	printf("********    0.exit     ********\n");
-	printf("*******************************\n");
+	printf("***************************************\n");
+	printf("********       扫雷游戏         *******\n");
+	printf("********    1.play   0.exit     *******\n");
+	printf("***************************************\n");
+
 }
 
-//整个游戏函数
+//玩游戏函数
+//扫雷游戏规则  1.非零数字表示数字周围的8个位置中有几个雷
+//2.数字0则打开周围不是雷的格子 此处不写
+//3.有雷点到则失败
 void game()
 {
-	char ret = 0;
-	//初始化棋盘的值
-	char board[ROW][COL];
-	Initboard(board, ROW, COL);
+	char mine[ROWS][COLS] = { 0 };//雷的放置数组
+	char show[ROWS][COLS] = { 0 };//周围雷的遍历
+	//初始化棋盘
+	Init_board(mine, ROWS, COLS, '0');
+	Init_board(show, ROWS, COLS, '*');
+
 	//打印棋盘
-	displayboard(board, ROW, COL);
-	//循环下棋
-	while (1)
-	{
-		//玩家下棋（输入）
-		printf("玩家下棋：\n");
-		playermove(board, ROW, COL);
-		//打印棋盘
-		displayboard(board, ROW, COL);
-		//判断输赢 返回标志1.'*'玩家赢2.'#'电脑赢3.'Q'平局4.'C'还未结束，继续
-		ret = IsWin(board, ROW, COL);
-		if (ret != 'C')//游戏结束
-			break;
-		//电脑下棋（随机空格）
-		printf("电脑下棋：\n");
-		computermove(board, ROW, COL);
-		//打印棋盘
-		displayboard(board, ROW, COL);
-		//判断输赢
-		ret = IsWin(board, ROW, COL);
-		if (ret != 'C')
-			break;
-	}
-	if (ret == '*')
-	{
-		printf("玩家赢了\n");
-		printf("\n");
-	}
-	else if (ret == '#')
-	{
-		printf("电脑赢了\n");
-		printf("\n");
-	}
-	else
-	{
-		printf("平局\n");
-		printf("\n");
-	}
-	
-}
+	//Display_board(mine, ROW, COL);
+	Display_board(show, ROW, COL);
 
-//棋盘内容初始化函数
-void Initboard(char board[ROW][COL], int row, int col)
-{
+	//布置雷到mine数组中
+	Set_mine(mine, ROW, COL, count);
+	Display_board(mine, ROW, COL);
+
+	//扫雷
+	//输入坐标，
+	//1. 是雷，则打印很遗憾你被炸死了。
+	//2. 不是雷，然后遍历mine中的坐标的周围雷的数量，返回并保存到show数组中
 	int i = 0;
-	int j = 0;
-	for (i = 0; i < ROW; i++)
+	printf("初级扫雷，总格数81个，雷10个\n");
+	printf("-------------------------------\n");
+	while (i < mine_count)
 	{
-		for (j = 0; j < COL; j++)
+		int p = 0;
+		int q = 0;
+		int ret = 0;
+		printf("请输入坐标:");
+		scanf("%d %d", &p, &q);
+		if (p >= 1 && p <= ROW && q >= 1 && q <= COL)//坐标是否有效
 		{
-			board[i][j] = ' ';
-		}
-	}
-		
-}
-
-//棋盘打印函数 分行列打印
-void displayboard(char board[ROW][COL], int row, int col)
-{
-	int i = 0;
-	int j = 0;
-	for (i = 0; i < ROW; i++)//控制内容行
-	{
-		//打印内容
-		for (j = 0; j < COL; j++)
-		{
-			printf(" %c ", board[i][j]);
-			if (j < COL - 1)//最后一列没有分隔符
-				printf("|");
-		}
-		printf("\n");
-		//制作分隔
-		if (i < ROW - 1)//最后一行没有分隔符
-		{
-			for (j = 0; j < COL; j++)
+			if (mine[p][q] == '1')
 			{
-				printf("---");
-				if (j < COL - 1)//最后一列没有分隔
-					printf("|");
-			}
-		}
-		printf("\n");
-	}
-}
-
-//玩家下棋函数
-void playermove(char board[ROW][COL], int row, int col)
-{
-	int x = 0;
-	int y = 0;
-	printf("请输入坐标：");
-	while (1)
-	{
-		scanf("%d %d", &x, &y);
-		//判断坐标的有效性
-		if (x >= 1 && x <= row && y >= 1 && y <= col)
-		{
-			//判断坐标是否被占有
-			if (board[x - 1][y - 1] == ' ')
-			{
-				board[x - 1][y - 1] = '*';
+				printf("很遗憾，你被炸死了，游戏结束\n");
 				break;
 			}
 			else
-				printf("坐标已被占用，请重新输入:\n");
+			{
+				//遍历坐标周围雷的数量
+				ret = Find_mine(mine, p, q);
+				show[p][q] = ret + '0';//整型转换为字符型，加一个字符0的ASCII值
+				//打印show数组
+				Display_board(show, ROW, COL);
+				i++;
+
+			}
 		}
 		else
-			printf("坐标无效，请重新输入:\n");
+			printf("坐标输入无效，请重新输入\n");
 	}
-	
+	//3. 当非雷被排完之后，则打印恭喜你通关成功
+	if (i == mine_count)
+	{
+		printf("恭喜了，通关成功！！\n");
+		Display_board(show, ROW, COL);
+	}
+
 }
 
-//电脑下棋函数
-void computermove(char board[ROW][COL], int row, int col)
-{
-	int x = 0;
-	int y = 0;
-	while (1)
-	{
-		x = rand() % row;
-		y = rand() % col;
-		//判断坐标是否被占有
-		if (board[x][y] == ' ')
-		{
-			board[x][y] = '#';
-			break;
-		}
-	}
-}
-
-//判断输赢或过程函数
-char IsWin(char board[ROW][COL], int row, int col)
-{
-	int i = 0;
-	int flag = 0;
-	//看一行是否三个相同
-	for (i = 0; i < row; i++)
-	{
-		if (board[i][0] == board[i][1] && board[i][1] == board[i][2] && board[i][0] != ' ')
-		{
-			return board[i][0];//返回相应的符号
-		}
-	}
-
-	//看一列是否三个相同
-	for (i = 0; i < row; i++)
-	{
-		if (board[0][i] == board[1][i] && board[1][i] == board[2][i] && board[0][i] != ' ')
-		{
-			return board[i][0];//返回相应的符号
-		}
-	}
-	
-	//看对角线是否三个相同
-	if (board[0][0] == board[1][1] && board[1][1] == board[2][2] && board[0][0] != ' ')
-		return board[1][1];
-	if (board[2][0] == board[1][1] && board[1][1] == board[0][2] && board[2][0] != ' ')
-		return board[1][1];
-	//三种情况均不是 判断是否平局，即判断棋盘是否满了
-	flag = IsFull(board, row, col);
-	if (flag == 1)
-		return 'Q';
-	//以上情况都不是则继续
-	return 'C';
-}
-
-//判断棋盘是否下满
-int IsFull(char board[ROW][COL], int row, int col)
+//初始化棋盘
+void Init_board(char board[ROWS][COLS], int rows, int cols, char set)
 {
 	int i = 0;
 	int j = 0;
-	for (i = 0; i < row; i++)
+	for (i = 0; i < rows; i++)
 	{
-		for (j = 0; j < col; j++)
+		for (j = 0; j < cols; j++)
 		{
-			if (board[i][j] == ' ')
-			{
-				return 0;//棋盘没满
-			}
+			board[i][j] = set;
 		}
 	}
-	return 1;//棋盘满了
+}
+
+//打印棋盘
+void Display_board(char board[ROWS][COLS], int row, int col)
+{
+	int i = 0;
+	int j = 0;
+	printf("*******   扫雷游戏    ********\n");
+
+	for (i = 0; i <= col; i++)
+	{
+		printf("%d ", i);
+	}
+	printf("\n");
+	for (i = 1; i <= row; i++)
+	{
+		printf("%d", i);
+		for (j = 1; j <= col; j++)
+		{
+			printf(" %c", board[i][j]);
+		}
+		printf("\n");
+	}
+
+}
+
+//布置雷
+void Set_mine(char mine[ROWS][COLS], int row, int col, int n) 
+{
+	int i = 0;
+	int x = 0;
+	int y = 0;
+	while (i < n)
+	{
+		x = rand() % 9 + 1;
+		y = rand() % 9 + 1;
+		if (mine[x][y] == '0')//查看是否布置了
+		{
+			mine[x][y] = '1';//布置为雷
+			i++;
+		}
+	}
+	
+}
+
+//遍历坐标周围雷的数量
+int Find_mine(char mine[ROWS][COLS], int x, int y)
+{
+	return mine[x - 1][y - 1] + mine[x - 1][y] + mine[x - 1][y + 1]
+		+ mine[x][y - 1] + mine[x][y + 1] + mine[x + 1][y - 1]
+		+ mine[x + 1][y] + mine[x + 1][y + 1] - 8 * '0';//字符转换为整型-'0'
 
 }
